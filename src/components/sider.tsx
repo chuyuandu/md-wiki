@@ -1,5 +1,5 @@
 import React from 'react';
-import {Tree, Divider} from 'antd';
+import {Tree} from 'antd';
 import {Global} from '../mobx/global';
 import {EventDataNode} from 'rc-tree/lib/interface';
 import Axios from 'axios';
@@ -40,12 +40,25 @@ export default class Sider extends React.Component<props>  {
     //   key: rootKey,
     //   title: '目录',
     // }]
-    treeData: []
+    treeData: [],
+    height: this.getHeight()
+  }
+
+  getHeight() {
+    return window.innerHeight - 64;
+  }
+
+  resize = () => {
+    this.setState({
+      height: this.getHeight()
+    })
   }
 
   componentDidMount() {
+    window.addEventListener('resize', this.resize, false);
     autorun(() => {
       // console.log(123)
+      // 调用repository，以便让 aotorun 能识别denpendency
       const repo = this.props.store.repository;
       // this.setState({
       //   treeData: [{
@@ -55,6 +68,10 @@ export default class Sider extends React.Component<props>  {
       // })
       this.getChildren('', '');
     });
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.resize);
   }
 
   updateTreeData(list: nodeData[], key: string, children: nodeData[]): nodeData[] {

@@ -5,9 +5,9 @@ import {Global} from '../mobx/global';
 import { observer } from 'mobx-react';
 import { autorun } from 'mobx';
 import Axios from 'axios'
-import {Divider, Typography} from 'antd';
+import {Spin, Typography} from 'antd';
 // @ts-ignore
-import { Base64 } from 'js-base64';
+// import { Base64 } from 'js-base64';
 
 interface props {
   store: Global
@@ -16,7 +16,8 @@ interface props {
 @observer
 export default class Content extends React.Component<props> {
   state = {
-    source: ''
+    source: '',
+    loading: false
   }
 
   // @computed
@@ -28,11 +29,28 @@ export default class Content extends React.Component<props> {
   getContent = autorun(() => {
     const fileUrl = this.props.store.selectFileInfo.git_url;
     if(fileUrl) {
-      Axios.get(fileUrl)
+      window.scrollTo({
+        top: 0
+      });
+      this.setState({
+        loading: true
+      })
+      Axios.get(fileUrl, {
+        headers: {
+          accept: 'application/vnd.github.VERSION.raw',
+          // responseType: 'blob'
+        }
+      })
       .then(res => {
         // console.log(res.data)
         this.setState({
-          source: Base64.decode(res.data.content)
+          // source: Base64.decode(res.data.content)
+          source: res.data
+        })
+      })
+      .finally(() => {
+        this.setState({
+          loading: false
         })
       })
     }
@@ -45,10 +63,18 @@ export default class Content extends React.Component<props> {
         {this.props.store.selectFileInfo.path}
       </Typography.Title>
       <Typography.Text>
-        <Markdown
+        {
+          this.state.loading
+          ? (
+            <Spin ></Spin>
+          )
+          : <Markdown
           source = {this.state.source}
+          escapeHtml = {true}
           >
           </Markdown>
+        }
+        
       </Typography.Text>
       </>
     )

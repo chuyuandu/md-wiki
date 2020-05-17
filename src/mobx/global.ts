@@ -48,6 +48,7 @@ export class Global {
     Axios.interceptors.request.use(function(config) {
       config.headers.Authorization = auth;
       config.headers.Accept = 'application/vnd.github.v3+json;'
+      // config.headers.Accept = 'application/vnd.github.VERSION.raw'
       return config;
     });
   }
@@ -55,7 +56,7 @@ export class Global {
   @action
   selectFile(treeNode: DataNode) {
     // this.selectFilePath = treeNode.key;
-    const blobUrl = treeNode.git_url;
+    // const blobUrl = treeNode.git_url;
     Object.assign(this.selectFileInfo, {
       name: treeNode.title,
       path: treeNode.key,

@@ -48,7 +48,9 @@ export default class Config extends React.Component {
       <Button type="primary" onClick={this.showPop}>配置</Button>
       <Modal title="设置"
         visible={this.state.visible}
+        closable={true}
         footer = {null}
+        onCancel={this.cancel}
         >
         <Form {...layout}
           name="basic"
