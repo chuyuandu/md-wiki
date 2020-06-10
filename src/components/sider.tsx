@@ -1,5 +1,5 @@
 import React from 'react';
-import {Tree} from 'antd';
+import {Tree, Menu} from 'antd';
 import {Global} from '../mobx/global';
 import {EventDataNode} from 'rc-tree/lib/interface';
 import Axios from 'axios';
@@ -41,7 +41,8 @@ export default class Sider extends React.Component<props>  {
     //   title: '目录',
     // }]
     treeData: [],
-    height: this.getHeight()
+    height: this.getHeight(),
+    menuVisible: false,
   }
 
   getHeight() {
@@ -148,6 +149,12 @@ export default class Sider extends React.Component<props>  {
     }
   }
 
+  onRightClick = () => {
+    this.setState({
+      menuVisible: true
+    })
+  }
+
   render() {
     return (
       <>
@@ -155,9 +162,32 @@ export default class Sider extends React.Component<props>  {
         treeData={this.state.treeData}
         defaultExpandedKeys={[rootKey]}
         onSelect={this.onSelect.bind(this)}
+        onRightClick={this.onRightClick}
         />
-      {/* <Divider type="vertical" /> */}
+      <ContextMenu visible={this.state.menuVisible} />
       </>
     )
   }
+}
+
+interface ContextMenuProps {
+  visible: boolean;
+  top?: number;
+  left?: number;
+  onClick?: Function;
+}
+
+function ContextMenu(props: ContextMenuProps) {
+  const {
+    visible = true
+  } = props;
+  return (
+    <Menu style={{
+      display: visible ? '' : 'none'
+    }}>
+      <Menu.Item>
+        删除
+      </Menu.Item>
+    </Menu>
+  )
 }

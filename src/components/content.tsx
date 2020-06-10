@@ -5,7 +5,9 @@ import {Global} from '../mobx/global';
 import { observer } from 'mobx-react';
 import { autorun } from 'mobx';
 import Axios from 'axios'
-import {Spin, Typography} from 'antd';
+import {Spin, Typography, Modal} from 'antd';
+import {EditOutlined} from '@ant-design/icons';
+import editFile from './editor';
 // @ts-ignore
 // import { Base64 } from 'js-base64';
 
@@ -33,7 +35,8 @@ export default class Content extends React.Component<props> {
         top: 0
       });
       this.setState({
-        loading: true
+        loading: true,
+        source: '',
       })
       Axios.get(fileUrl, {
         headers: {
@@ -56,11 +59,20 @@ export default class Content extends React.Component<props> {
     }
   })
 
+  edit = () => {
+    // Modal.confirm({
+    //   content: (<Editor source={this.state.source} />)
+    // })
+    editFile(this.state.source);
+  }
+
   render() {
     return (
       <>
       <Typography.Title>
         {this.props.store.selectFileInfo.path}
+
+        <EditOutlined onClick={this.edit}/>
       </Typography.Title>
       <Typography.Text>
         {
