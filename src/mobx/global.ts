@@ -1,12 +1,14 @@
 import { observable, action } from 'mobx';
 // import {EventDataNode} from 'rc-tree/lib/interface';
 import Axios from 'axios';
+import {notification} from 'antd'
 
 interface DataNode {
   title: string;
   key: string;
   download_url: string;
   git_url: string;
+  sha: string;
 }
 
 export interface updateConfigParam {
@@ -51,6 +53,35 @@ export class Global {
       // config.headers.Accept = 'application/vnd.github.VERSION.raw'
       return config;
     });
+
+    Axios.interceptors.response.use(function(response) {
+      return response;
+    }, function(error) {
+      let msg = '请求出错'
+      if (error) {
+        if(error.response && error.response.status) {
+          msg = error.response.statusText;
+          // switch (error.response.status) {
+          //   case 500:
+          //     // do something...
+          //     break
+          //   case 404:
+          //     // do something...
+          //     break
+          //   default:
+          //     // do something...
+          //     break
+          // }
+        }
+        else {
+          msg = error.message;
+        }
+      }
+      notification.error({
+        message: msg
+      });
+      return Promise.reject('')
+    })
   }
 
   @action
@@ -62,6 +93,7 @@ export class Global {
       path: treeNode.key,
       download_url: treeNode.download_url,
       git_url: treeNode.git_url,
+      sha: treeNode.sha,
     });
     // return Axios.get(blobUrl)
     // .then(res => {

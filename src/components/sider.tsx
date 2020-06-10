@@ -99,6 +99,7 @@ export default class Sider extends React.Component<props>  {
         title: item.name,
         type: item.type,
         download_url: item.download_url,
+        sha: item.sha,
         git_url: item.git_url,
         isLeaf: item.type === 'file'
       }

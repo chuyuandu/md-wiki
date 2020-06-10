@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import {Modal} from 'antd';
+import {Modal, Input, notification} from 'antd';
 // @ts-ignore
 import MarkdownIt from 'markdown-it';
 // import ReactMarkdown from 'react-markdown';
@@ -63,13 +63,49 @@ class Editor extends React.Component<props> {
     return (
       <MdEditor ref={node => this.myRef = node}
         value= {this.props.source}
-        style={{ height: window.innerHeight - 250}}
+        style={{ height: window.innerHeight - 200}}
         renderHTML={this.renderHTML}
         />
     )
   }
 }
 
+function doPut(content: string) {
+  let msg = '';
+  function update(e: React.ChangeEvent<HTMLInputElement>) {
+    msg = e.target.value;
+  }
+  const input = <Input onChange={update} />
+
+  return new Promise((resolve) => {
+    Modal.confirm({
+      content: input,
+      title: 'log message',
+      onOk() {
+        if(msg) {
+          addOrUpdateFile({
+            path: store.selectFileInfo.path,
+            message: msg,
+            content: content,
+            sha: store.selectFileInfo.sha,
+          }).then((res) => {
+            if(res.status === 200 || res.status === 201) {
+              notification.info({
+                message: '保存成功，请刷新页面后查看'
+              })
+              resolve()
+            }
+            else {
+              notification.error({
+                message: '保存失败'
+              })
+            }
+          })
+        }
+      }
+    })
+  })
+}
 
 export default function editFile(source: string) {
   let ref: Editor | null;
@@ -85,18 +121,8 @@ export default function editFile(source: string) {
     title: store.selectFileInfo.name,
     content: content,
     onOk() {
-      console.log(1)
       if(ref) {
-        console.log(ref.getValue())
-
-        addOrUpdateFile({
-          path: store.selectFileInfo.path,
-          message: 'test',
-          content: ref.getValue(),
-          sha: store.selectFileInfo.sha,
-        }).then(() => {
-
-        })
+        return doPut(ref.getValue())
       }
     },
   })

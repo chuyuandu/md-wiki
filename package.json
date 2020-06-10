@@ -157,5 +157,5 @@
   "devDependencies": {
     "less-loader": "^6.1.0"
   },
-  "homepage": "wiki-api"
+  "homepage": "."
 }

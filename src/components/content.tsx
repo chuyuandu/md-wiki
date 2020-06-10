@@ -5,7 +5,7 @@ import {Global} from '../mobx/global';
 import { observer } from 'mobx-react';
 import { autorun } from 'mobx';
 import Axios from 'axios'
-import {Spin, Typography, Modal} from 'antd';
+import {Spin, Typography, Row, Col} from 'antd';
 import {EditOutlined} from '@ant-design/icons';
 import editFile from './editor';
 // @ts-ignore
@@ -69,10 +69,14 @@ export default class Content extends React.Component<props> {
   render() {
     return (
       <>
-      <Typography.Title>
-        {this.props.store.selectFileInfo.path}
+      <Typography.Title level={3}>
+        <Row>
+          <Col flex="auto 1">{this.props.store.selectFileInfo.path}</Col>
+          <Col flex="100px 0"><EditOutlined onClick={this.edit}/></Col>
+        </Row>
+        
 
-        <EditOutlined onClick={this.edit}/>
+        
       </Typography.Title>
       <Typography.Text>
         {
