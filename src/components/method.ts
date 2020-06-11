@@ -1,6 +1,7 @@
 import Axios from 'axios';
 // @ts-ignore
 import { Base64 } from 'js-base64';
+import store from '../mobx/global';
 
 export default function getConfig() {
   let storageConfig = localStorage.getItem('config');
@@ -12,6 +13,10 @@ export default function getConfig() {
     catch(e) {}
   }
   return config;
+}
+
+export function getDefaultBranch() {
+  return localStorage.getItem('defaultBranch') || 'master'
 }
 
 interface updateParam {
@@ -32,6 +37,12 @@ export function addOrUpdateFile(params: updateParam) {
   return Axios.put(`contents/${path}`, {
     message,
     content: Base64.encode(content),
-    sha
+    sha,
+    branch: store.branch,
   })
+}
+
+export function getBranches() {
+
+  return Axios.get(`branches`)
 }

@@ -61,13 +61,19 @@ export default class Sider extends React.Component<props>  {
       // console.log(123)
       // 调用repository，以便让 aotorun 能识别denpendency
       const repo = this.props.store.repository;
+      const branch = this.props.store.branch;
       // this.setState({
       //   treeData: [{
       //     key: rootKey,
       //     title: '目录',
       //   }]
       // })
-      this.getChildren('', '');
+      if(repo) {
+        this.setState({
+          treeData: [],
+        });
+        this.getChildren('', '');
+      }
     });
   }
 
@@ -129,8 +135,7 @@ export default class Sider extends React.Component<props>  {
   }
 
   getChildren(path: string, key: string) {
-    return Axios.get(`contents/${path}`).then(res => {
-      console.log(res.data)
+    return Axios.get(`contents/${path}?ref=${this.props.store.branch}`).then(res => {
       const children = this.formateData(res.data);
 
       const data = key ? this.updateTreeData(this.state.treeData, key, children) : children;

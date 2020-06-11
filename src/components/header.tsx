@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Row, Col } from 'antd';
 import {Global} from '../mobx/global';
 import Pop from './config';
+import Branch from './branch';
 import { observer } from 'mobx-react';
 import axios from 'axios';
 import store from '../mobx/global'
@@ -37,9 +38,16 @@ export default observer(function Header({store}: props) {
     <Row>
       <Col style={{
         fontSize: '20px',
-        fontWeight: 'bold'
-      }} flex="auto 1">
+        fontWeight: 'bold',
+        padding: '0 8px',
+      }} flex="auto 0">
         {store.repository}
+
+      </Col>
+      <Col flex="auto 1" style={{
+        padding: '0 8px',
+      }}>
+        <Branch />
       </Col>
       <Col flex="auto 0">
         {

@@ -23,6 +23,7 @@ function basicAuth(token: string) {
 export class Global {
   @observable repository = '';
   @observable token = '';
+  @observable branch = 'master';
   // @observable selectFileUrl = '';
   // @observable selectFilePath = '';
   @observable selectFileInfo = {
@@ -36,6 +37,12 @@ export class Global {
   }
 
   @action
+  setBranch(branch: string) {
+    this.branch = branch;
+    localStorage.setItem('defaultBranch', branch);
+  }
+
+  @action
   updateConfig(config: updateConfigParam) {
     this.repository = config.repository;
     this.token = config.token;
@@ -43,13 +50,17 @@ export class Global {
       repository: config.repository,
       token: config.token
     }));
-
+    const cur = this;
     
     Axios.defaults.baseURL = 'https://api.github.com/repos/' + config.repository;
     const auth = basicAuth(config.token);
     Axios.interceptors.request.use(function(config) {
       config.headers.Authorization = auth;
       config.headers.Accept = 'application/vnd.github.v3+json;'
+      // config.params = {
+      //   ref: cur.branch,
+      //   ...config.params
+      // }
       // config.headers.Accept = 'application/vnd.github.VERSION.raw'
       return config;
     });
