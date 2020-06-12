@@ -8,6 +8,7 @@ import { DownOutlined } from '@ant-design/icons';
 
 export default observer(function Branch() {
     const [branchList, setBranchList] = useState<string[]>([])
+    const [disabeld, setDisabled] = useState(false)
     function switchBranch({key}: {key: string}) {
         // store.branch = key;
         store.setBranch(key);
@@ -23,12 +24,13 @@ export default observer(function Branch() {
         getBranches().then(res => {
             const branches: string[] = res.data.map((item: any) => item.name);
             setBranchList(branches);
+            setDisabled(branches.length <= 1);
             if(!branches.includes(store.branch)) {
                 store.setBranch(branches[0]);
             }
         })
     }, [])
-    return <Dropdown overlay={menu} trigger={['click']}>
+    return <Dropdown overlay={menu} trigger={['click']} disabled={disabeld} >
         <a>{store.branch} <DownOutlined /></a>
     </Dropdown>
 })

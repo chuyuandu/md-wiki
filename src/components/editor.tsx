@@ -81,9 +81,10 @@ function doPut(content: string) {
     Modal.confirm({
       content: input,
       title: 'log message',
+      maskClosable: false,
       onOk() {
         if(msg) {
-          addOrUpdateFile({
+          return addOrUpdateFile({
             path: store.selectFileInfo.path,
             message: msg,
             content: content,
@@ -99,9 +100,11 @@ function doPut(content: string) {
               notification.error({
                 message: '保存失败'
               })
+              return Promise.reject('保存失败')
             }
           })
         }
+        return Promise.reject('')
       }
     })
   })
@@ -113,7 +116,7 @@ export default function editFile(source: string) {
   Modal.confirm({
     width: window.innerWidth * 0.9,
     mask: true,
-    maskClosable: true,
+    maskClosable: false,
     keyboard: true,
     centered: true,
     okText: '保存',

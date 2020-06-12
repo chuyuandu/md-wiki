@@ -26,6 +26,8 @@ export default class Config extends React.Component {
   onFinish = (values: Store) => {
     // console.log(global)
     global.updateConfig(values as updateConfigParam);
+    // 修改仓库地址后，默认将branch设置为master
+    global.setBranch('master');
     this.setState({
       visible: false
     })
@@ -47,6 +49,7 @@ export default class Config extends React.Component {
       <>
       <Button type="primary" onClick={this.showPop}>配置</Button>
       <Modal title="设置"
+        maskClosable={false}
         visible={this.state.visible}
         closable={true}
         footer = {null}
