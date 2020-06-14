@@ -1,8 +1,8 @@
 import React from 'react';
-import { Modal, Form, Input, Button, Space } from 'antd';
+import { Modal, Form, Input, Button, Space, Select } from 'antd';
 import { Store } from 'antd/lib/form/interface';
 import global, {updateConfigParam} from '../mobx/global';
-import getConfig from './method'
+import {getConfig, isValidConfig} from './method'
 
 const layout = {
   labelCol: { span: 6 },
@@ -14,7 +14,7 @@ const tailLayout = {
 const config = getConfig();
 export default class Config extends React.Component {
   state = {
-    visible: config === null
+    visible: !isValidConfig(config)
   }
 
   showPop = () => {
@@ -26,8 +26,8 @@ export default class Config extends React.Component {
   onFinish = (values: Store) => {
     // console.log(global)
     global.updateConfig(values as updateConfigParam);
-    // 修改仓库地址后，默认将branch设置为master
-    global.setBranch('master');
+    // // 修改仓库地址后，默认将branch设置为master
+    // global.setBranch('master');
     this.setState({
       visible: false
     })
@@ -42,8 +42,10 @@ export default class Config extends React.Component {
   render() {
     const configData = config || {};
     const initialValues = {
+      type: configData.type || '',
+      owner: configData.owner || '',
       repository: configData.repository || '',
-      token: configData.token || ''
+      token: configData.token || '',
     }
     return (
       <>
@@ -61,10 +63,28 @@ export default class Config extends React.Component {
           onFinish={this.onFinish}
           // onFinishFailed={onFinishFailed}
           >
+          <Form.Item
+            label="仓库类型"
+            name="type"
+            rules={[{ required: true, message: '输入仓库地址' }]}
+            >
+              <Select defaultValue="gitee">
+                <Select.Option value="gitee">码云</Select.Option>
+                <Select.Option value="github">GitHub</Select.Option>
+              </Select>
+            </Form.Item>
+
             <Form.Item
-              label="仓库地址"
+              label="仓库owner"
+              name="owner"
+              rules={[{ required: true, message: '请输入owner' }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              label="仓库名"
               name="repository"
-              rules={[{ required: true, message: '输入仓库地址' }]}
+              rules={[{ required: true, message: '输入仓库名' }]}
             >
               <Input />
             </Form.Item>

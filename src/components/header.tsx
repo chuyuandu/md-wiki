@@ -26,14 +26,14 @@ export default observer(function Header({store}: props) {
   }
 
   reaction(() => store.token, () => {
-    getUserInfo()
+    // getUserInfo()
   });
 
-  useEffect(() => {
-    if(store.token) {
-      getUserInfo()
-    }
-  }, [])
+  // useEffect(() => {
+  //   if(store.token) {
+  //     getUserInfo()
+  //   }
+  // }, [])
 
   function goToGitHub() {
     

@@ -9,7 +9,7 @@ import MdEditor from 'react-markdown-editor-lite';
 import 'react-markdown-editor-lite/lib/index.css';
 
 import store from '../mobx/global';
-import { addOrUpdateFile } from './method';
+import { saveFile } from './method';
 
 const mdParser = new MarkdownIt();
 
@@ -84,24 +84,13 @@ function doPut(content: string) {
       maskClosable: false,
       onOk() {
         if(msg) {
-          return addOrUpdateFile({
+          return saveFile({
             path: store.selectFileInfo.path,
             message: msg,
             content: content,
             sha: store.selectFileInfo.sha,
           }).then((res) => {
-            if(res.status === 200 || res.status === 201) {
-              notification.info({
-                message: '保存成功，请刷新页面后查看'
-              })
-              resolve()
-            }
-            else {
-              notification.error({
-                message: '保存失败'
-              })
-              return Promise.reject('保存失败')
-            }
+            resolve(res);
           })
         }
         return Promise.reject('')

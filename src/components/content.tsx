@@ -4,10 +4,11 @@ import Markdown from 'react-markdown';
 import {Global} from '../mobx/global';
 import { observer } from 'mobx-react';
 import { autorun } from 'mobx';
-import Axios from 'axios'
+// import Axios from 'axios'
 import {Spin, Typography, Row, Col} from 'antd';
 import {EditOutlined} from '@ant-design/icons';
 import editFile from './editor';
+import { getFileContent } from './method'
 // @ts-ignore
 // import { Base64 } from 'js-base64';
 
@@ -29,8 +30,8 @@ export default class Content extends React.Component<props> {
 
   // @autorun
   getContent = autorun(() => {
-    const fileUrl = this.props.store.selectFileInfo.git_url;
-    if(fileUrl) {
+    const sha = this.props.store.selectFileInfo.sha;
+    if(sha) {
       window.scrollTo({
         top: 0
       });
@@ -38,17 +39,18 @@ export default class Content extends React.Component<props> {
         loading: true,
         source: '',
       })
-      Axios.get(fileUrl, {
-        headers: {
-          accept: 'application/vnd.github.VERSION.raw',
-          // responseType: 'blob'
-        }
-      })
+      // Axios.get(fileUrl, {
+      //   headers: {
+      //     accept: 'application/vnd.github.VERSION.raw',
+      //     // responseType: 'blob'
+      //   }
+      // })
+      getFileContent({sha})
       .then(res => {
         // console.log(res.data)
         this.setState({
           // source: Base64.decode(res.data.content)
-          source: res.data
+          source: res
         })
       })
       .finally(() => {

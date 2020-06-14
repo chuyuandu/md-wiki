@@ -12,6 +12,8 @@ interface DataNode {
 }
 
 export interface updateConfigParam {
+  type: string;
+  owner: string;
   repository: string;
   token: string;
 }
@@ -21,6 +23,8 @@ function basicAuth(token: string) {
 }
 
 export class Global {
+  @observable type: string = 'gitee';
+  @observable owner: string = '';
   @observable repository = '';
   @observable token = '';
   @observable branch = 'master';
@@ -44,26 +48,39 @@ export class Global {
 
   @action
   updateConfig(config: updateConfigParam) {
+    if(this.repository !== config.repository
+      || this.type !== config.type
+      || this.owner !== config.owner) {
+        // 默认重置为master分支
+        // TODO: 应重置为默认分支，仓库的默认分支可能被设置为非 master
+        this.branch = 'master';
+      }
+
     this.repository = config.repository;
     this.token = config.token;
+    this.type = config.type;
+    this.owner = config.owner;
     localStorage.setItem('config', JSON.stringify({
+      type: config.type,
+      owner: config.owner,
       repository: config.repository,
-      token: config.token
+      token: config.token,
+      branch: this.branch,
     }));
     const cur = this;
     
-    Axios.defaults.baseURL = 'https://api.github.com/repos/' + config.repository;
-    const auth = basicAuth(config.token);
-    Axios.interceptors.request.use(function(config) {
-      config.headers.Authorization = auth;
-      config.headers.Accept = 'application/vnd.github.v3+json;'
-      // config.params = {
-      //   ref: cur.branch,
-      //   ...config.params
-      // }
-      // config.headers.Accept = 'application/vnd.github.VERSION.raw'
-      return config;
-    });
+    // Axios.defaults.baseURL = 'https://api.github.com/repos/' + config.repository;
+    // const auth = basicAuth(config.token);
+    // Axios.interceptors.request.use(function(config) {
+    //   config.headers.Authorization = auth;
+    //   config.headers.Accept = 'application/vnd.github.v3+json;'
+    //   // config.params = {
+    //   //   ref: cur.branch,
+    //   //   ...config.params
+    //   // }
+    //   // config.headers.Accept = 'application/vnd.github.VERSION.raw'
+    //   return config;
+    // });
 
     Axios.interceptors.response.use(function(response) {
       return response;
@@ -91,7 +108,7 @@ export class Global {
       notification.error({
         message: msg
       });
-      return Promise.reject('')
+      return error;
     })
   }
 
@@ -114,5 +131,4 @@ export class Global {
     // })
   }
 }
-
 export default new Global();

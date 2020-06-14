@@ -21,8 +21,9 @@ export default observer(function Branch() {
         }
         </Menu>;
     useEffect(() => {
-        getBranches().then(res => {
-            const branches: string[] = res.data.map((item: any) => item.name);
+        getBranches().then(branchList => {
+            const branches = branchList.map(item => item.name);
+            // const branches: string[] = res.data.map((item: any) => item.name);
             setBranchList(branches);
             setDisabled(branches.length <= 1);
             if(!branches.includes(store.branch)) {

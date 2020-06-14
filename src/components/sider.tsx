@@ -1,10 +1,11 @@
 import React from 'react';
-import {Tree, Menu} from 'antd';
+import {Tree, Menu, Dropdown} from 'antd';
 import {Global} from '../mobx/global';
 import {EventDataNode} from 'rc-tree/lib/interface';
 import Axios from 'axios';
-import {autorun} from 'mobx';
+import {autorun, reaction} from 'mobx';
 import {observer} from 'mobx-react';
+import {isValidConfig, getTrees} from './method';
 
 interface props {
   store: Global
@@ -41,45 +42,45 @@ export default class Sider extends React.Component<props>  {
     //   title: '目录',
     // }]
     treeData: [],
-    height: this.getHeight(),
-    menuVisible: false,
+    // height: this.getHeight(),
+    // menuVisible: false,
   }
 
-  getHeight() {
-    return window.innerHeight - 64;
-  }
+  // getHeight() {
+  //   return window.innerHeight - 64;
+  // }
 
-  resize = () => {
-    this.setState({
-      height: this.getHeight()
-    })
-  }
+  // resize = () => {
+  //   this.setState({
+  //     height: this.getHeight()
+  //   })
+  // }
 
   componentDidMount() {
-    window.addEventListener('resize', this.resize, false);
-    autorun(() => {
-      // console.log(123)
-      // 调用repository，以便让 aotorun 能识别denpendency
+    // window.addEventListener('resize', this.resize, false);
+    reaction(() => {
       const repo = this.props.store.repository;
-      const branch = this.props.store.branch;
-      // this.setState({
-      //   treeData: [{
-      //     key: rootKey,
-      //     title: '目录',
-      //   }]
-      // })
-      if(repo) {
+      const store = this.props.store;
+      return {
+        type: store.type,
+        owner: store.owner,
+        repository: store.repository,
+      }
+    }, (config: any) => {
+      if(isValidConfig(config)) {
         this.setState({
           treeData: [],
         });
         this.getChildren('', '');
       }
+    }, {
+      fireImmediately: true,
     });
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.resize);
-  }
+  // componentWillUnmount() {
+  //   window.removeEventListener('resize', this.resize);
+  // }
 
   updateTreeData(list: nodeData[], key: string, children: nodeData[]): nodeData[] {
     return list.map(node => {
@@ -102,12 +103,12 @@ export default class Sider extends React.Component<props>  {
     return data.map(item => {
       return {
         key: item.path,
-        title: item.name,
+        title: item.path,
         type: item.type,
-        download_url: item.download_url,
+        // download_url: item.download_url,
         sha: item.sha,
-        git_url: item.git_url,
-        isLeaf: item.type === 'file'
+        // git_url: item.git_url,
+        isLeaf: item.type === 'blob'
       }
     })
   }
@@ -135,21 +136,26 @@ export default class Sider extends React.Component<props>  {
   }
 
   getChildren(path: string, key: string) {
-    return Axios.get(`contents/${path}?ref=${this.props.store.branch}`).then(res => {
-      const children = this.formateData(res.data);
-
-      const data = key ? this.updateTreeData(this.state.treeData, key, children) : children;
-
+    return getTrees({path}).then((data) => {
       this.setState({
         treeData: data
       })
     })
+    // return Axios.get(`contents/${path}?ref=${this.props.store.branch}`).then(res => {
+    //   const children = this.formateData(res.data);
+
+    //   const data = key ? this.updateTreeData(this.state.treeData, key, children) : children;
+
+    //   this.setState({
+    //     treeData: data
+    //   })
+    // })
   }
 
   onSelect (key: string | React.ReactNode, { node }: info) {
     // this.props.store.selectFileUrl = key as string;
     // @ts-ignore
-    if(node.type === 'file') {
+    if(node.type === 'blob') {
       // @ts-ignore
       this.props.store.selectFile(node);
     }
@@ -162,16 +168,21 @@ export default class Sider extends React.Component<props>  {
   }
 
   render() {
+    const menu = <Menu>
+      <Menu.Item key="addFolder">新建目录</Menu.Item>
+      <Menu.Item key="addFile">新建文件</Menu.Item>
+      <Menu.Item key="del">删除</Menu.Item>
+    </Menu>;
     return (
-      <>
+      <Dropdown overlay={menu} trigger={['contextMenu']}>
+        <div>
       <Tree loadData={this.loadData}
         treeData={this.state.treeData}
         defaultExpandedKeys={[rootKey]}
         onSelect={this.onSelect.bind(this)}
         onRightClick={this.onRightClick}
-        />
-      <ContextMenu visible={this.state.menuVisible} />
-      </>
+        /></div>
+      </Dropdown>
     )
   }
 }
