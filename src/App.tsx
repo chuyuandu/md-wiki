@@ -6,7 +6,7 @@ import Sider from './components/sider';
 import Content from './components/content';
 import store from './mobx/global';
 import './App.css';
-import {getConfig, getDefaultBranch} from './components/method'
+import {getConfig} from './components/method'
 // import { autorun, computed } from 'mobx';
 
 // Axios.defaults.headers..Authorization = basicAuth('304320930@qq.com', 'dcy6100407149')

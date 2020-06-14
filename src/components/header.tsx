@@ -5,39 +5,57 @@ import Pop from './config';
 import Branch from './branch';
 import { observer } from 'mobx-react';
 import axios from 'axios';
-import {GithubOutlined} from '@ant-design/icons';
+import Icon, {GithubOutlined} from '@ant-design/icons';
 import { autorun, reaction } from 'mobx';
+import {getUserInfo} from './method'
+import { ReactComponent as Gitee} from '../gitee.svg';
 
 interface props {
   store: Global
 }
+
+const JumpIcon = observer(function ({store}: props) {
+  let title = '', link = '';
+  const style = {fontSize: '1.5em', color: "initial"};
+  if(store.type === 'gitee') {
+    title = '前往码云官网查看';
+    link = `https://gitee.com/${store.owner}/${store.repository}${store.branch && store.branch !== 'master' ? `/tree/${store.branch}` : '' }`
+  }
+  else {
+    title = '前往GitHub官网查看'
+    link = `https://github.com/${store.owner}/${store.repository}${store.branch && store.branch !== 'master' ? `/tree/${store.branch}` : '' }`
+  }
+  return <Tooltip title={title} placement="bottom">
+  <a href={link}
+    target="_blank">
+      {
+        store.type === 'gitee' ?
+          <Icon component={Gitee} style={style} />
+        : <GithubOutlined style={style} />
+      }
+      
+    </a>
+  </Tooltip>
+})
 
 // @observer
 export default observer(function Header({store}: props) {
   
   const [useName, setUserName] = useState('');
 
-  function getUserInfo() {
-    axios.get('https://api.github.com/user')
-      .then((res) => {
-        // 用户可能没有设置昵称，此时使用登录名
-        setUserName(res.data.name || res.data.login)
-      })
-  }
-
-  reaction(() => store.token, () => {
-    // getUserInfo()
-  });
-
-  // useEffect(() => {
-  //   if(store.token) {
-  //     getUserInfo()
-  //   }
-  // }, [])
-
-  function goToGitHub() {
-    
-  }
+  useEffect(() => {
+    reaction(() => store.token, (token: string) => {
+      if(token) {
+        getUserInfo().then(data =>{
+          // 用户可能没有设置昵称，此时使用登录名
+          setUserName(data.name || data.login)
+        })
+      }
+    }, {
+      fireImmediately: true,
+      delay: 20,
+    });
+  }, [])
 
   return (
     <Row>
@@ -46,7 +64,7 @@ export default observer(function Header({store}: props) {
         fontWeight: 'bold',
         // padding: '0 8px',
       }} flex="auto 0">
-        {store.repository}
+        {store.owner}/{store.repository}
 
       </Col>
       <Col flex="auto 1" style={{
@@ -54,12 +72,7 @@ export default observer(function Header({store}: props) {
       }}>
         <Branch />
         &nbsp;&nbsp;
-        <Tooltip title="前往github查看" placement="bottom">
-        <a href={`https://github.com/${store.repository}${store.branch && store.branch !== 'master' ? `/tree/${store.branch}` : '' }`}
-          target="_blank">
-            <GithubOutlined style={{fontSize: '1.5em', color: "initial"}} />
-          </a>
-        </Tooltip>
+        <JumpIcon store={store}/>
      </Col>
       <Col flex="auto 0">
         {

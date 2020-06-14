@@ -1,7 +1,8 @@
 import { observable, action } from 'mobx';
 // import {EventDataNode} from 'rc-tree/lib/interface';
-import Axios from 'axios';
-import {notification} from 'antd'
+// import Axios from 'axios';
+// import {notification} from 'antd';
+import {treeData, giteeTreeOri, formatItem} from '../components/method'
 
 interface DataNode {
   title: string;
@@ -16,10 +17,7 @@ export interface updateConfigParam {
   owner: string;
   repository: string;
   token: string;
-}
-
-function basicAuth(token: string) {
-  return `token ${token}`
+  branch: string;
 }
 
 export class Global {
@@ -31,8 +29,6 @@ export class Global {
   // @observable selectFileUrl = '';
   // @observable selectFilePath = '';
   @observable selectFileInfo = {
-    git_url: '',
-    download_url: '',
     path: '',
     name: '',
     content: '',
@@ -40,33 +36,51 @@ export class Global {
     node_id: '',
   }
 
+  @observable newFile: treeData | null = null;
+
   @action
   setBranch(branch: string) {
     this.branch = branch;
-    localStorage.setItem('defaultBranch', branch);
+    this.updateLocalStorage();
+  }
+
+  updateLocalStorage() {
+    localStorage.setItem('config', JSON.stringify({
+      type: this.type,
+      owner: this.owner,
+      repository: this.repository,
+      token: this.token,
+      branch: this.branch,
+    }));
   }
 
   @action
   updateConfig(config: updateConfigParam) {
-    if(this.repository !== config.repository
-      || this.type !== config.type
-      || this.owner !== config.owner) {
-        // 默认重置为master分支
-        // TODO: 应重置为默认分支，仓库的默认分支可能被设置为非 master
-        this.branch = 'master';
-      }
-
+    if(config.branch) {
+      this.branch = config.branch;
+    }
+    else {
+      if(this.repository !== config.repository
+        || this.type !== config.type
+        || this.owner !== config.owner) {
+          // 默认重置为master分支
+          // TODO: 应重置为默认分支，仓库的默认分支可能被设置为非 master
+          this.branch = 'master';
+        }
+    }
+    
     this.repository = config.repository;
     this.token = config.token;
     this.type = config.type;
     this.owner = config.owner;
-    localStorage.setItem('config', JSON.stringify({
-      type: config.type,
-      owner: config.owner,
-      repository: config.repository,
-      token: config.token,
-      branch: this.branch,
-    }));
+    this.updateLocalStorage();
+    // localStorage.setItem('config', JSON.stringify({
+    //   type: config.type,
+    //   owner: config.owner,
+    //   repository: config.repository,
+    //   token: config.token,
+    //   branch: this.branch,
+    // }));
     const cur = this;
     
     // Axios.defaults.baseURL = 'https://api.github.com/repos/' + config.repository;
@@ -81,35 +95,6 @@ export class Global {
     //   // config.headers.Accept = 'application/vnd.github.VERSION.raw'
     //   return config;
     // });
-
-    Axios.interceptors.response.use(function(response) {
-      return response;
-    }, function(error) {
-      let msg = '请求出错'
-      if (error) {
-        if(error.response && error.response.status) {
-          msg = error.response.statusText;
-          // switch (error.response.status) {
-          //   case 500:
-          //     // do something...
-          //     break
-          //   case 404:
-          //     // do something...
-          //     break
-          //   default:
-          //     // do something...
-          //     break
-          // }
-        }
-        else {
-          msg = error.message;
-        }
-      }
-      notification.error({
-        message: msg
-      });
-      return error;
-    })
   }
 
   @action
@@ -129,6 +114,11 @@ export class Global {
     //   this.selectFileInfo.sha = res.data.sha;
     //   this.selectFileInfo.node_id = res.data.node_id;
     // })
+  }
+
+  @action
+  addFile(file: giteeTreeOri) {
+    this.newFile = formatItem(file, file.name || '');
   }
 }
 export default new Global();

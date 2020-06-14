@@ -20,7 +20,8 @@ interface props {
 export default class Content extends React.Component<props> {
   state = {
     source: '',
-    loading: false
+    loading: false,
+    fileSuffix: '',
   }
 
   // @computed
@@ -35,9 +36,11 @@ export default class Content extends React.Component<props> {
       window.scrollTo({
         top: 0
       });
+      const name = this.props.store.selectFileInfo.name;
       this.setState({
         loading: true,
         source: '',
+        fileSuffix: name.toLowerCase().substring(name.lastIndexOf('.') + 1),
       })
       // Axios.get(fileUrl, {
       //   headers: {
@@ -86,11 +89,17 @@ export default class Content extends React.Component<props> {
           ? (
             <Spin ></Spin>
           )
-          : <Markdown
-          source = {this.state.source}
-          escapeHtml = {true}
-          >
-          </Markdown>
+          : (
+            this.state.fileSuffix === 'md'
+            ?
+            <Markdown
+            source = {this.state.source}
+            escapeHtml = {true}
+            >
+            </Markdown>
+
+            : <pre style={{whiteSpace: 'break-spaces', wordBreak: 'break-all'}}>{this.state.source}</pre>
+          )
         }
         
       </Typography.Text>

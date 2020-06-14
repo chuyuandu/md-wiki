@@ -5,6 +5,34 @@ import store from '../mobx/global';
 import { reaction } from 'mobx';
 import {notification} from 'antd';
 
+Axios.interceptors.response.use(function(response) {
+  return response;
+}, function(error) {
+  let msg = '请求出错'
+  if (error) {
+    if(error.response && error.response.status) {
+      msg = error.response.statusText;
+      // switch (error.response.status) {
+      //   case 500:
+      //     // do something...
+      //     break
+      //   case 404:
+      //     // do something...
+      //     break
+      //   default:
+      //     // do something...
+      //     break
+      // }
+    }
+    else {
+      msg = error.message;
+    }
+  }
+  notification.error({
+    message: msg
+  });
+  return error;
+})
 const giteeAxios = Axios.create({
   baseURL: 'https://gitee.com/api/v5',
   headers: {
@@ -23,6 +51,50 @@ const githubAxios = Axios.create({
   }
 });
 
+  function errHander(error: any) {
+    let msg = '请求出错'
+    if (error) {
+      if(error.response && error.response.status) {
+        const responseData = error.response.data;
+        if(responseData.message) {
+          msg = responseData.message;
+        }
+        else if(responseData.messages) {
+          msg = responseData.messages.join(' ')
+        }
+        else {
+          msg = error.response.statusText;
+        }
+        // switch (error.response.status) {
+        //   case 500:
+        //     // do something...
+        //     break
+        //   case 404:
+        //     // do something...
+        //     break
+        //   default:
+        //     // do something...
+        //     break
+        // }
+      }
+      else {
+        if(error.message) {
+          msg = error.message;
+        }
+      }
+    }
+    notification.error({
+      message: msg
+    });
+    return Promise.reject(error);
+  }
+
+giteeAxios.interceptors.response.use(function(response) {
+  return response;
+}, errHander)
+githubAxios.interceptors.response.use(function(response) {
+  return response;
+}, errHander)
 
 // 修改token时，修改默认参数
 reaction(() => {
@@ -54,8 +126,14 @@ export function getConfig() {
   return config;
 }
 
-export function getDefaultBranch() {
-  return localStorage.getItem('defaultBranch') || 'master'
+// export function getDefaultBranch() {
+//   return localStorage.getItem('defaultBranch') || 'master'
+// }
+
+interface delFileParams {
+  path: string;
+  message: string;
+  sha: string;
 }
 
 interface saveFileParam {
@@ -73,22 +151,7 @@ interface saveFileResult {
   type: string,
 }
 
-export function addOrUpdateFile(params: saveFileParam) {
-  const {
-    path,
-    message,
-    content,
-    sha
-  } = params;
-  return Axios.put(`contents/${path}`, {
-    message,
-    content: Base64.encode(content),
-    sha,
-    branch: store.branch,
-  })
-}
-
-interface treeData {
+export interface treeData {
   key: string;
   title: string;
   type: string;
@@ -97,30 +160,23 @@ interface treeData {
   children?: treeData[]
 }
 
+function formatItem(item:giteeTreeOri, name: string):treeData {
+  return {
+    key: item.path,
+    title: name,
+    sha: item.sha,
+    type: item.type,
+    isLeaf: item.type === 'blob'
+  }
+}
 abstract class Methods {
+  abstract getUserInfo(): Promise<{name: string, login: string}>;
   abstract getTrees(param: getTreeParams): Promise<any>;
   abstract getBranches() : Promise<{ name: string}[]>;
   abstract getFileContent(param: getFileContentParams): Promise<string>;
   abstract saveFile(params: saveFileParam): Promise<saveFileResult>;
-}
-interface giteeTreeOri {
-  path: string;
-  sha: string;
-  type: string;
-}
-class GiteeMethods extends Methods {
-  private axiosInstance = giteeAxios;
 
-  private formatItem(item:giteeTreeOri, name: string):treeData {
-    return {
-      key: item.path,
-      title: name,
-      sha: item.sha,
-      type: item.type,
-      isLeaf: item.type === 'blob'
-    }
-  }
-  private formatTreeData(data: giteeTreeOri[]) :treeData[] {
+  formatTreeData(data: giteeTreeOri[]) :treeData[] {
     const dataList:treeData[] = [];
 
     const temp: {[x:string]: treeData} = {};
@@ -135,7 +191,7 @@ class GiteeMethods extends Methods {
       else {
         name = curPath;
       }
-      const dataItem = this.formatItem(item, name);
+      const dataItem = formatItem(item, name);
       let targetArr = dataList;
       if(parent && temp[parent]) {
         const targetParent = temp[parent];
@@ -149,6 +205,25 @@ class GiteeMethods extends Methods {
     })
 
     return dataList;
+  }
+}
+export interface giteeTreeOri {
+  path: string;
+  sha: string;
+  type: string;
+  name?: string;
+}
+class GiteeMethods extends Methods {
+  private axiosInstance = giteeAxios;
+  getUserInfo() {
+    return this.axiosInstance.get('user', {
+      params: {
+        access_token: store.token,
+      }
+    })
+      .then((res) => {
+        return res.data;
+      })
   }
 
   getTrees({path, sha}: getTreeParams) {
@@ -201,6 +276,19 @@ class GiteeMethods extends Methods {
     })
   }
 
+  delFile(param: delFileParams) {
+    return this.axiosInstance({
+      url: `repos/${store.owner}/${store.repository}/contents/${param.path}`,
+      method: 'DELETE',
+      params: {
+        access_token: store.token,
+        message: param.message,
+        sha: param.sha,
+        branch: store.branch,
+      }
+    })
+  }
+
   saveFile(params: saveFileParam) {
   const {
     path,
@@ -221,56 +309,51 @@ class GiteeMethods extends Methods {
     }
   })
   .then((res => {
-    if(res.status === 200 || res.status === 201) {
-      const content = res.data.content;
-      if(isCreated) {
-        return {
-          name: content.name,
-          path: content.path,
-          sha: content.sha,
-          type: content.type,
-        }
-      }
-      else {
-        return {
-          name: content.name,
-          path: content.path,
-          sha: content.sha,
-          type: content.type,
-        }
+    const content = res.data.content;
+    if(isCreated) {
+      return {
+        name: content.name,
+        path: content.path,
+        sha: content.sha,
+        type: content.type,
       }
     }
     else {
-      notification.error({
-        message: '保存失败'
-      });
-      return Promise.reject('保存失败')
+      return {
+        name: content.name,
+        path: content.path,
+        sha: content.sha,
+        type: content.type,
+      }
     }
   }))
 }
 }
 class GitHubMethods extends Methods {
   private axiosInstance = githubAxios;
+  getUserInfo() {
+    return this.axiosInstance.get('user')
+      .then((res) => {
+        return res.data;
+      })
+  }
 
   getTrees({path, sha}: getTreeParams) {
     return this.axiosInstance({
       url: `repos/${store.owner}/${store.repository}/git/trees/${sha || store.branch}`,
       params: {
-        access_token: store.token,
+        ref: store.branch,
         recursive: '1',
       },
     })
     .then(res => {
-      return res.data;
+      return this.formatTreeData(res.data.tree)
     })
   }
 
   getBranches() {
     return this.axiosInstance({
       url: `repos/${store.owner}/${store.repository}/branches`,
-      params: {
-        access_token: store.token,
-      },
     })
     .then(res => {
       return res.data.map((item: any) => {
@@ -283,8 +366,8 @@ class GitHubMethods extends Methods {
   getFileContent({sha}: getFileContentParams) {
     return this.axiosInstance({
       url: `repos/${store.owner}/${store.repository}/git/blobs/${sha}`,
-      params: {
-        access_token: store.token,
+      headers: {
+        Accept: 'application/vnd.github.VERSION.raw',
       },
     })
     .then(res => {
@@ -300,8 +383,8 @@ class GitHubMethods extends Methods {
       isCreated, 
     } = params;
     return this.axiosInstance({
-      url: `repos/${store.owner}/${store.repository}/contents /${path}`,
-      method: isCreated ? 'post' : 'put',
+      url: `repos/${store.owner}/${store.repository}/contents/${path}`,
+      method: 'put',
       data: {
         message,
         content: Base64.encode(content),
@@ -311,6 +394,18 @@ class GitHubMethods extends Methods {
     })
     .then(res => {
       return res.data
+    })
+  }
+
+  delFile(param: delFileParams) {
+    return this.axiosInstance({
+      url: `repos/${store.owner}/${store.repository}/contents/${param.path}`,
+      method: 'DELETE',
+      params: {
+        message: param.message,
+        sha: param.sha,
+        branch: store.branch,
+      }
     })
   }
 }
@@ -344,30 +439,37 @@ interface getFileContentParams {
   sha: string;
 }
 
-function githubGetTrees({path}: getTreeParams) {
-  return githubAxios.get(`repos/${store.owner}/${store.repository}/contents/${path}`, {
-    params: {
-      ref: store.branch,
-    }
-  })
-  .then(res => {
-    return res.data;
-  })
-}
-
 // get branch list
-export function getBranches(): Promise<{name: string}[]> {
+function getBranches(): Promise<{name: string}[]> {
   return getMethodInstance().getBranches();
 }
 // get trees
-export function getTrees(params: getTreeParams): Promise<any> {
+function getTrees(params: getTreeParams): Promise<any> {
   return getMethodInstance().getTrees(params);
 }
 
-export function  getFileContent(params: getFileContentParams) {
+function getFileContent(params: getFileContentParams) {
   return getMethodInstance().getFileContent(params)
 }
 
-export function saveFile(params: saveFileParam) {
+function saveFile(params: saveFileParam) {
   return getMethodInstance().saveFile(params);
 }
+
+function getUserInfo() {
+  return getMethodInstance().getUserInfo();
+}
+
+function delFile(params:delFileParams) {
+  return getMethodInstance().delFile(params);
+}
+
+export {
+  formatItem,
+  getUserInfo,
+  getBranches,
+  getTrees,
+  getFileContent,
+  saveFile,
+  delFile,
+};
