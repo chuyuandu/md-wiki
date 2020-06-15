@@ -1,52 +1,53 @@
-import Axios, { AxiosInstance } from 'axios';
+import Axios from 'axios';
 // @ts-ignore
 import { Base64 } from 'js-base64';
 import store from '../mobx/global';
 import { reaction } from 'mobx';
 import {notification} from 'antd';
+import {treeData, giteeTreeOri, formatItem} from '../components/common';
 
-Axios.interceptors.response.use(function(response) {
-  return response;
-}, function(error) {
-  let msg = '请求出错'
-  if (error) {
-    if(error.response && error.response.status) {
-      msg = error.response.statusText;
-      // switch (error.response.status) {
-      //   case 500:
-      //     // do something...
-      //     break
-      //   case 404:
-      //     // do something...
-      //     break
-      //   default:
-      //     // do something...
-      //     break
-      // }
-    }
-    else {
-      msg = error.message;
-    }
-  }
-  notification.error({
-    message: msg
-  });
-  return error;
-})
+// Axios.interceptors.response.use(function(response) {
+//   return response;
+// }, function(error) {
+//   let msg = '请求出错'
+//   if (error) {
+//     if(error.response && error.response.status) {
+//       msg = error.response.statusText;
+//       // switch (error.response.status) {
+//       //   case 500:
+//       //     // do something...
+//       //     break
+//       //   case 404:
+//       //     // do something...
+//       //     break
+//       //   default:
+//       //     // do something...
+//       //     break
+//       // }
+//     }
+//     else {
+//       msg = error.message;
+//     }
+//   }
+//   notification.error({
+//     message: msg
+//   });
+//   return error;
+// })
 const giteeAxios = Axios.create({
   baseURL: 'https://gitee.com/api/v5',
   headers: {
     'Content-Type': 'application/json;charset=UTF-8',
   },
-  // 此处设置的params无效
-  // params: {
-  //   access_token: ''
-  // },
+  // 此处设置的params会被覆盖,仅仅是为了之后可以直接对默认值设置属性值
+  params: {
+    access_token: store.token,
+  },
 });
 const githubAxios = Axios.create({
   baseURL: 'https://api.github.com',
   headers: {
-    // Authorization: `token ${token}`,
+    Authorization: `token ${store.token}`,
     Accept: 'application/vnd.github.v3+json;',
   }
 });
@@ -98,16 +99,25 @@ githubAxios.interceptors.response.use(function(response) {
 
 // 修改token时，修改默认参数
 reaction(() => {
-  return store.token
-}, (token: string) => {
+  return  {
+    token: store.token,
+    type: store.type,
+  }
+}, (config: {token: string; type: string}) => {
   if(isGitee()) {
-    // giteeAxios.defaults.params['access_token'] = token;
+    giteeAxios.defaults.params['access_token'] = config.token;
   }
   else if(isGithub()) {
-    githubAxios.defaults.headers['Authorization'] = `token ${token}`;
+    githubAxios.defaults.headers['Authorization'] = `token ${config.token}`;
   }
 }, {
-  fireImmediately: true
+  fireImmediately: true,
+  delay: 0,
+  equals(a, b) {
+    return ['token', 'config'].every(key => {
+      return a[key] === b[key];
+    })
+  }
 })
 
 export function isValidConfig(config: any) {
@@ -151,24 +161,7 @@ interface saveFileResult {
   type: string,
 }
 
-export interface treeData {
-  key: string;
-  title: string;
-  type: string;
-  sha: string;
-  isLeaf: boolean;
-  children?: treeData[]
-}
 
-function formatItem(item:giteeTreeOri, name: string):treeData {
-  return {
-    key: item.path,
-    title: name,
-    sha: item.sha,
-    type: item.type,
-    isLeaf: item.type === 'blob'
-  }
-}
 abstract class Methods {
   abstract getUserInfo(): Promise<{name: string, login: string}>;
   abstract getTrees(param: getTreeParams): Promise<any>;
@@ -206,12 +199,6 @@ abstract class Methods {
 
     return dataList;
   }
-}
-export interface giteeTreeOri {
-  path: string;
-  sha: string;
-  type: string;
-  name?: string;
 }
 class GiteeMethods extends Methods {
   private axiosInstance = giteeAxios;
@@ -380,7 +367,7 @@ class GitHubMethods extends Methods {
       message,
       content,
       sha,
-      isCreated, 
+      // isCreated, 
     } = params;
     return this.axiosInstance({
       url: `repos/${store.owner}/${store.repository}/contents/${path}`,

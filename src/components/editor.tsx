@@ -1,6 +1,6 @@
 
-import React, { useState, ChangeEvent } from 'react';
-import {Modal, Input, notification} from 'antd';
+import React, { ChangeEvent } from 'react';
+import {Modal, Input} from 'antd';
 // @ts-ignore
 import MarkdownIt from 'markdown-it';
 // import ReactMarkdown from 'react-markdown';
@@ -10,7 +10,7 @@ import 'react-markdown-editor-lite/lib/index.css';
 import { messageConfirm } from './common';
 
 import store from '../mobx/global';
-import { saveFile, formatItem } from './method';
+import { saveFile } from './method';
 
 const mdParser = new MarkdownIt();
 
@@ -92,6 +92,8 @@ function doPut(content: string) {
             content: content,
             sha: store.selectFileInfo.sha,
           }).then((res) => {
+            // store.selectFileInfo.sha = res.sha;
+            store.updateSelectFile(res)
             resolve(res);
           })
         }

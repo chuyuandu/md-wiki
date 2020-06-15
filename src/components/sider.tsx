@@ -1,12 +1,12 @@
 import React from 'react';
-import {Tree, Menu, Dropdown, Popover, Space} from 'antd';
+import {Tree, Menu, Dropdown } from 'antd';
 import {Global} from '../mobx/global';
 import {EventDataNode} from 'rc-tree/lib/interface';
 import {reaction} from 'mobx';
 import {observer} from 'mobx-react';
-import {isValidConfig, getTrees, delFile, treeData} from './method';
-import { messageConfirm } from './common';
-import { FileAddFilled, DeleteFilled } from '@ant-design/icons';
+import {isValidConfig, getTrees, delFile} from './method';
+import { messageConfirm, treeData } from './common';
+// import { FileAddFilled, DeleteFilled } from '@ant-design/icons';
 import { ClickParam } from 'antd/lib/menu';
 import editFile from './editor';
 
@@ -67,6 +67,7 @@ export default class Sider extends React.Component<props>  {
       }
     });
 
+    // 新建文件
     reaction(() => {
       return store.newFile
     }, (newFile: treeData | null) => {
@@ -83,8 +84,37 @@ export default class Sider extends React.Component<props>  {
         })
       }
     })
+
+    // 更新文件
+    reaction(() => {
+      return store.shaChanged
+    }, (shaChanged: string[]) => {
+      if(shaChanged.length) {
+        this.updateNode(shaChanged[0], shaChanged[1], this.state.treeData);
+        this.setState({
+          treeData: this.state.treeData.slice()
+        })
+      }
+    }, {
+      delay: 10,
+      // fireImmediately: true,
+    });
   }
 
+  updateNode(sha: string, newSha: string, dataList: nodeData[]): boolean {
+    return dataList.some(item => {
+      if(item.sha === sha) {
+        item.sha = newSha;
+        return true;
+      }
+      else {
+        if(item.children) {
+          return this.updateNode(sha, newSha, item.children)
+        }
+        return false;
+      }
+    });
+  }
 
   updateTreeData(list: nodeData[], key: string, children: nodeData[]): nodeData[] {
     return list.map(node => {
@@ -158,6 +188,7 @@ export default class Sider extends React.Component<props>  {
 
   onSelect (key: string | React.ReactNode, { node }: info) {
     // this.props.store.selectFileUrl = key as string;
+    console.log(1);
     // @ts-ignore
     if(node.type === 'blob') {
       // @ts-ignore
@@ -256,6 +287,7 @@ export default class Sider extends React.Component<props>  {
         <div>
       <Tree loadData={this.loadData}
         // showLine={true}
+        blockNode={true}
         treeData={this.state.treeData}
         defaultExpandedKeys={[rootKey]}
         onSelect={this.onSelect.bind(this)}
@@ -273,17 +305,17 @@ interface ContextMenuProps {
   onClick?: Function;
 }
 
-function ContextMenu(props: ContextMenuProps) {
-  const {
-    visible = true
-  } = props;
-  return (
-    <Menu style={{
-      display: visible ? '' : 'none'
-    }}>
-      <Menu.Item>
-        删除
-      </Menu.Item>
-    </Menu>
-  )
-}
+// function ContextMenu(props: ContextMenuProps) {
+//   const {
+//     visible = true
+//   } = props;
+//   return (
+//     <Menu style={{
+//       display: visible ? '' : 'none'
+//     }}>
+//       <Menu.Item>
+//         删除
+//       </Menu.Item>
+//     </Menu>
+//   )
+// }

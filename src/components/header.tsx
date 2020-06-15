@@ -4,9 +4,9 @@ import {Global} from '../mobx/global';
 import Pop from './config';
 import Branch from './branch';
 import { observer } from 'mobx-react';
-import axios from 'axios';
+// import axios from 'axios';
 import Icon, {GithubOutlined} from '@ant-design/icons';
-import { autorun, reaction } from 'mobx';
+import { reaction } from 'mobx';
 import {getUserInfo} from './method'
 import { ReactComponent as Gitee} from '../gitee.svg';
 

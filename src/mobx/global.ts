@@ -2,7 +2,7 @@ import { observable, action } from 'mobx';
 // import {EventDataNode} from 'rc-tree/lib/interface';
 // import Axios from 'axios';
 // import {notification} from 'antd';
-import {treeData, giteeTreeOri, formatItem} from '../components/method'
+import {treeData, giteeTreeOri, formatItem} from '../components/common'
 
 interface DataNode {
   title: string;
@@ -21,11 +21,12 @@ export interface updateConfigParam {
 }
 
 export class Global {
-  @observable type: string = 'gitee';
+  @observable type: string = '';
   @observable owner: string = '';
   @observable repository = '';
   @observable token = '';
   @observable branch = 'master';
+  @observable shaChanged: string[] = [];
   // @observable selectFileUrl = '';
   // @observable selectFilePath = '';
   @observable selectFileInfo = {
@@ -74,27 +75,7 @@ export class Global {
     this.type = config.type;
     this.owner = config.owner;
     this.updateLocalStorage();
-    // localStorage.setItem('config', JSON.stringify({
-    //   type: config.type,
-    //   owner: config.owner,
-    //   repository: config.repository,
-    //   token: config.token,
-    //   branch: this.branch,
-    // }));
-    const cur = this;
     
-    // Axios.defaults.baseURL = 'https://api.github.com/repos/' + config.repository;
-    // const auth = basicAuth(config.token);
-    // Axios.interceptors.request.use(function(config) {
-    //   config.headers.Authorization = auth;
-    //   config.headers.Accept = 'application/vnd.github.v3+json;'
-    //   // config.params = {
-    //   //   ref: cur.branch,
-    //   //   ...config.params
-    //   // }
-    //   // config.headers.Accept = 'application/vnd.github.VERSION.raw'
-    //   return config;
-    // });
   }
 
   @action
@@ -104,21 +85,22 @@ export class Global {
     Object.assign(this.selectFileInfo, {
       name: treeNode.title,
       path: treeNode.key,
-      download_url: treeNode.download_url,
-      git_url: treeNode.git_url,
       sha: treeNode.sha,
     });
-    // return Axios.get(blobUrl)
-    // .then(res => {
-    //   this.selectFileInfo.content = atob(res.data.content);
-    //   this.selectFileInfo.sha = res.data.sha;
-    //   this.selectFileInfo.node_id = res.data.node_id;
-    // })
   }
 
   @action
   addFile(file: giteeTreeOri) {
     this.newFile = formatItem(file, file.name || '');
+  }
+
+  @action
+  updateSelectFile(file: giteeTreeOri) {
+    const oldSha = this.selectFileInfo.sha;
+    const newSha = file.sha;
+    // shaChange 时，由于tree的key是path，所以不会触发node重新select
+    this.selectFileInfo.sha = newSha;
+    this.shaChanged = [oldSha, newSha];
   }
 }
 export default new Global();

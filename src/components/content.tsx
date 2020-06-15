@@ -3,7 +3,7 @@ import React from 'react';
 import Markdown from 'react-markdown';
 import {Global} from '../mobx/global';
 import { observer } from 'mobx-react';
-import { autorun } from 'mobx';
+import { reaction } from 'mobx';
 // import Axios from 'axios'
 import {Spin, Typography, Row, Col} from 'antd';
 import {EditOutlined} from '@ant-design/icons';
@@ -29,40 +29,43 @@ export default class Content extends React.Component<props> {
   //   return this.props.store.selectFileInfo.git_url
   // }
 
-  // @autorun
-  getContent = autorun(() => {
-    const sha = this.props.store.selectFileInfo.sha;
-    if(sha) {
-      window.scrollTo({
-        top: 0
-      });
-      const name = this.props.store.selectFileInfo.name;
-      this.setState({
-        loading: true,
-        source: '',
-        fileSuffix: name.toLowerCase().substring(name.lastIndexOf('.') + 1),
-      })
-      // Axios.get(fileUrl, {
-      //   headers: {
-      //     accept: 'application/vnd.github.VERSION.raw',
-      //     // responseType: 'blob'
-      //   }
-      // })
-      getFileContent({sha})
-      .then(res => {
-        // console.log(res.data)
+  componentDidMount() {
+    reaction(() => this.props.store.selectFileInfo.sha,
+      (sha) => {
+      if(sha) {
+        window.scrollTo({
+          top: 0
+        });
+        const name = this.props.store.selectFileInfo.name;
         this.setState({
-          // source: Base64.decode(res.data.content)
-          source: res
+          loading: true,
+          source: '',
+          fileSuffix: name.toLowerCase().substring(name.lastIndexOf('.') + 1),
         })
-      })
-      .finally(() => {
-        this.setState({
-          loading: false
+        // Axios.get(fileUrl, {
+        //   headers: {
+        //     accept: 'application/vnd.github.VERSION.raw',
+        //     // responseType: 'blob'
+        //   }
+        // })
+        getFileContent({sha})
+        .then(res => {
+          // console.log(res.data)
+          this.setState({
+            // source: Base64.decode(res.data.content)
+            source: res
+          })
         })
-      })
-    }
-  })
+        .finally(() => {
+          this.setState({
+            loading: false
+          })
+        })
+      }
+    }, {
+      fireImmediately: true
+    })
+  }
 
   edit = () => {
     // Modal.confirm({
@@ -99,7 +102,7 @@ export default class Content extends React.Component<props> {
             </Markdown>
 
             : <pre style={{whiteSpace: 'break-spaces', wordBreak: 'break-all'}}>{this.state.source}</pre>
-          )
+            )
         }
         
       </Typography.Text>

@@ -32,12 +32,12 @@ function App() {
   }
   useEffect(function addLister() {
     window.addEventListener('resize', resize, false);
+    initial();
 
     return function removeListener() {
       window.removeEventListener('resize', resize)
     }
   }, [])
-  initial();
   return (
     <Layout>
       <Affix>

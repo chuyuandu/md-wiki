@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Dropdown, Menu } from 'antd';
-import { getBranches } from './method'
+import { getBranches, isValidConfig } from './method'
 import store from '../mobx/global';
 import {reaction} from 'mobx';
 import { observer } from 'mobx-react';
@@ -27,22 +27,25 @@ export default observer(function Branch() {
               type: store.type,
               owner: store.owner,
               repository: store.repository,
+              token: store.token,
             }
           }, (config: any) => {
-            getBranches().then(branchList => {
-                const branches = branchList.map(item => item.name);
-                // const branches: string[] = res.data.map((item: any) => item.name);
-                setBranchList(branches);
-                setDisabled(branches.length <= 1);
-                if(!branches.includes(store.branch)) {
-                    store.setBranch(branches[0]);
-                }
-            })
+              if(isValidConfig(config)) {
+                getBranches().then(branchList => {
+                    const branches = branchList.map(item => item.name);
+                    // const branches: string[] = res.data.map((item: any) => item.name);
+                    setBranchList(branches);
+                    setDisabled(branches.length <= 1);
+                    if(!branches.includes(store.branch)) {
+                        store.setBranch(branches[0]);
+                    }
+                })
+              }
           }, {
             delay: 50,
             fireImmediately: true,
             equals: (a, b) => {
-              return ['type', 'owner', 'repository'].every(key => {
+              return ['type', 'owner', 'repository', 'token'].every(key => {
                 return a[key] === b[key]
               })
             }

@@ -1,6 +1,5 @@
 import React from 'react';
 import {Modal, Input} from 'antd';
-import { ModalFuncProps } from 'antd/lib/modal';
 
 interface param {
     title: string;
@@ -30,4 +29,27 @@ export  function messageConfirm(param: param) {
         }
     },
   })
+}
+export interface treeData {
+  key: string;
+  title: string;
+  type: string;
+  sha: string;
+  isLeaf: boolean;
+  children?: treeData[]
+}
+export interface giteeTreeOri {
+  path: string;
+  sha: string;
+  type: string;
+  name?: string;
+}
+export function formatItem(item:giteeTreeOri, name: string):treeData {
+  return {
+    key: item.path,
+    title: name,
+    sha: item.sha,
+    type: item.type,
+    isLeaf: item.type === 'blob'
+  }
 }
