@@ -188,7 +188,6 @@ export default class Sider extends React.Component<props>  {
 
   onSelect (key: string | React.ReactNode, { node }: info) {
     // this.props.store.selectFileUrl = key as string;
-    console.log(1);
     // @ts-ignore
     if(node.type === 'blob') {
       // @ts-ignore

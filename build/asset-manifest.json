@@ -1,21 +1,21 @@
 {
   "files": {
     "main.css": "./static/css/main.7f9aa1e3.chunk.css",
-    "main.js": "./static/js/main.cd38c2c9.chunk.js",
+    "main.js": "./static/js/main.c7f7d96c.chunk.js",
     "runtime-main.js": "./static/js/runtime-main.bac915e3.js",
     "static/css/2.6111d483.chunk.css": "./static/css/2.6111d483.chunk.css",
-    "static/js/2.109ebf11.chunk.js": "./static/js/2.109ebf11.chunk.js",
+    "static/js/2.bcf3644b.chunk.js": "./static/js/2.bcf3644b.chunk.js",
     "index.html": "./index.html",
-    "precache-manifest.889e86115d99db440721889d8ddfcdf5.js": "./precache-manifest.889e86115d99db440721889d8ddfcdf5.js",
+    "precache-manifest.f5dddc2f7a6cfccb3a942273bb1d91dd.js": "./precache-manifest.f5dddc2f7a6cfccb3a942273bb1d91dd.js",
     "service-worker.js": "./service-worker.js",
-    "static/js/2.109ebf11.chunk.js.LICENSE.txt": "./static/js/2.109ebf11.chunk.js.LICENSE.txt",
+    "static/js/2.bcf3644b.chunk.js.LICENSE.txt": "./static/js/2.bcf3644b.chunk.js.LICENSE.txt",
     "static/media/gitee.87519cac.svg": "./static/media/gitee.87519cac.svg"
   },
   "entrypoints": [
     "static/js/runtime-main.bac915e3.js",
     "static/css/2.6111d483.chunk.css",
-    "static/js/2.109ebf11.chunk.js",
+    "static/js/2.bcf3644b.chunk.js",
     "static/css/main.7f9aa1e3.chunk.css",
-    "static/js/main.cd38c2c9.chunk.js"
+    "static/js/main.c7f7d96c.chunk.js"
   ]
 }
