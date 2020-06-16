@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Tooltip } from 'antd';
+import { Row, Col, Tooltip, Space } from 'antd';
 import {Global} from '../mobx/global';
 import Pop from './config';
 import Branch from './branch';
 import { observer } from 'mobx-react';
 // import axios from 'axios';
-import Icon, {GithubOutlined} from '@ant-design/icons';
+import Icon, {GithubOutlined, QuestionCircleFilled, QuestionCircleTwoTone} from '@ant-design/icons';
 import { reaction } from 'mobx';
 import {getUserInfo} from './method'
 import { ReactComponent as Gitee} from '../gitee.svg';
@@ -58,7 +58,7 @@ export default observer(function Header({store}: props) {
   }, [])
 
   return (
-    <Row>
+    <Row align="middle">
       <Col style={{
         fontSize: '20px',
         fontWeight: 'bold',
@@ -75,6 +75,7 @@ export default observer(function Header({store}: props) {
         <JumpIcon store={store}/>
      </Col>
       <Col flex="auto 0">
+        <Space>
         {
           useName && <span className="name-wrapper">
             <span className="name-title">当前用户：</span>
@@ -82,6 +83,8 @@ export default observer(function Header({store}: props) {
           </span> 
         }
         <Pop />
+
+        </Space>
       </Col>
     </Row>
   )
