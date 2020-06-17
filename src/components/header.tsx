@@ -5,8 +5,8 @@ import Pop from './config';
 import Branch from './branch';
 import { observer } from 'mobx-react';
 // import axios from 'axios';
-import Icon, {GithubOutlined, QuestionCircleFilled, QuestionCircleTwoTone} from '@ant-design/icons';
-import { reaction } from 'mobx';
+import Icon, {GithubOutlined} from '@ant-design/icons';
+// import { reaction } from 'mobx';
 import {getUserInfo} from './method'
 import { ReactComponent as Gitee} from '../gitee.svg';
 
@@ -27,7 +27,7 @@ const JumpIcon = observer(function ({store}: props) {
   }
   return <Tooltip title={title} placement="bottom">
   <a href={link}
-    target="_blank">
+    target="_blank" rel="noopener noreferrer">
       {
         store.type === 'gitee' ?
           <Icon component={Gitee} style={style} />
@@ -44,18 +44,18 @@ export default observer(function Header({store}: props) {
   const [useName, setUserName] = useState('');
 
   useEffect(() => {
-    reaction(() => store.token, (token: string) => {
-      if(token) {
+    // reaction(() => store.token, (token: string) => {
+      if(store.token) {
         getUserInfo().then(data =>{
           // 用户可能没有设置昵称，此时使用登录名
           setUserName(data.name || data.login)
         })
       }
-    }, {
-      fireImmediately: true,
-      delay: 20,
-    });
-  }, [])
+    // }, {
+    //   fireImmediately: true,
+    //   delay: 20,
+    // });
+  }, [store.token])
 
   return (
     <Row align="middle">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Dropdown, Menu } from 'antd';
+import { Dropdown, Menu, Button } from 'antd';
 import { getBranches, isValidConfig } from './method'
 import store from '../mobx/global';
 import {reaction} from 'mobx';
@@ -62,7 +62,7 @@ export default observer(function Branch() {
         // })
     }, [])
     return <Dropdown overlay={menu} trigger={['click']} disabled={disabeld} >
-        <a>{store.branch} <DownOutlined /></a>
+        <Button type="link">{store.branch} <DownOutlined /></Button>
     </Dropdown>
 })
 
